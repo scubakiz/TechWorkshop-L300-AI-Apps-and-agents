@@ -8,7 +8,8 @@ Write-Host
 # Check if Azure CLI is installed
 try {
     az --version | Out-Null
-} catch {
+}
+catch {
     Write-Host "❌ Azure CLI is not installed. Please install it first:" -ForegroundColor Red
     Write-Host "   https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
     exit 1
@@ -19,7 +20,8 @@ try {
     gh --version | Out-Null
     $AUTO_CREATE_SECRETS = $true
     Write-Host "✅ GitHub CLI detected - can auto-create secrets" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "⚠️  GitHub CLI is not installed. You'll need to manually create secrets." -ForegroundColor Yellow
     Write-Host "   Install from: https://cli.github.com/"
     $AUTO_CREATE_SECRETS = $false
@@ -54,7 +56,8 @@ try {
     }
 
     Write-Host "✅ Service principal created successfully" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "❌ Failed to create service principal. Please check your Azure login and permissions." -ForegroundColor Red
     exit 1
 }
@@ -74,13 +77,16 @@ if ($AUTO_CREATE_SECRETS) {
         $AZURE_CREDENTIALS | gh secret set AZURE_CREDENTIALS
         if ($LASTEXITCODE -eq 0) {
             Write-Host "✅ AZURE_CREDENTIALS secret created successfully" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Host "❌ Failed to create AZURE_CREDENTIALS secret" -ForegroundColor Red
         }
-    } catch {
+    }
+    catch {
         Write-Host "❌ Failed to create AZURE_CREDENTIALS secret: $_" -ForegroundColor Red
     }
-} else {
+}
+else {
     Write-Host "⚠️  Please manually create a GitHub secret named 'AZURE_CREDENTIALS' with the above value" -ForegroundColor Yellow
 }
 

@@ -14,10 +14,12 @@ if (Test-Path "src/Dockerfile") {
     $dockerContent = Get-Content "src/Dockerfile" -Raw
     if ($dockerContent -match "COPY \.env\* \.\/") {
         Write-Host "✅ Dockerfile found and properly configured for .env handling" -ForegroundColor Green
-    } else {
+    }
+    else {
         $issues += "Dockerfile doesn't have proper .env handling. Expected 'COPY .env* ./'"
     }
-} else {
+}
+else {
     $issues += "Dockerfile not found in src/ directory"
 }
 
@@ -27,10 +29,12 @@ if (Test-Path ".gitignore") {
     $gitignoreContent = Get-Content ".gitignore" -Raw
     if ($gitignoreContent -match "\.env") {
         Write-Host "✅ .gitignore properly excludes .env files" -ForegroundColor Green
-    } else {
+    }
+    else {
         $warnings += ".gitignore should exclude .env files for security"
     }
-} else {
+}
+else {
     $warnings += ".gitignore file not found"
 }
 
@@ -38,7 +42,8 @@ if (Test-Path ".gitignore") {
 Write-Host "Checking GitHub Actions workflow..." -ForegroundColor Yellow
 if (Test-Path ".github/workflows/deploy-to-acr.yml") {
     Write-Host "✅ GitHub Actions workflow found" -ForegroundColor Green
-} else {
+}
+else {
     $issues += "GitHub Actions workflow not found at .github/workflows/deploy-to-acr.yml"
 }
 
@@ -46,7 +51,8 @@ if (Test-Path ".github/workflows/deploy-to-acr.yml") {
 Write-Host "Checking environment template..." -ForegroundColor Yellow
 if (Test-Path "src/env_sample.txt") {
     Write-Host "✅ Environment template found" -ForegroundColor Green
-} else {
+}
+else {
     $warnings += "env_sample.txt not found - consider creating one as a template"
 }
 
@@ -54,7 +60,8 @@ if (Test-Path "src/env_sample.txt") {
 Write-Host "Checking for sensitive files..." -ForegroundColor Yellow
 if (Test-Path "src/.env") {
     $issues += "❌ SECURITY RISK: .env file found in src/ directory - this should not be committed!"
-} else {
+}
+else {
     Write-Host "✅ No .env file found in repository (good for security)" -ForegroundColor Green
 }
 
@@ -62,13 +69,15 @@ if (Test-Path "src/.env") {
 Write-Host "Checking Docker build context..." -ForegroundColor Yellow
 if (Test-Path "src/requirements.txt") {
     Write-Host "✅ requirements.txt found" -ForegroundColor Green
-} else {
+}
+else {
     $warnings += "requirements.txt not found in src/ - Docker build may fail"
 }
 
 if (Test-Path "src/chat_app.py") {
     Write-Host "✅ Main application file found" -ForegroundColor Green
-} else {
+}
+else {
     $warnings += "chat_app.py not found - verify main application file exists"
 }
 
@@ -77,7 +86,8 @@ Write-Host "Checking Azure CLI..." -ForegroundColor Yellow
 try {
     az --version | Out-Null
     Write-Host "✅ Azure CLI is available" -ForegroundColor Green
-} catch {
+}
+catch {
     $warnings += "Azure CLI not found - needed for local testing and setup"
 }
 
@@ -88,7 +98,8 @@ Write-Host "===================="
 
 if ($issues.Count -eq 0) {
     Write-Host "✅ No critical issues found!" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "❌ Critical Issues Found:" -ForegroundColor Red
     foreach ($issue in $issues) {
         Write-Host "   • $issue" -ForegroundColor Red
@@ -111,7 +122,8 @@ if ($issues.Count -eq 0) {
     Write-Host "1. Set up GitHub secrets (run setup-github-actions.ps1)"
     Write-Host "2. Push your changes to trigger the workflow"
     Write-Host "3. Monitor the deployment in GitHub Actions"
-} else {
+}
+else {
     Write-Host "🔧 Please fix the critical issues before proceeding with deployment." -ForegroundColor Yellow
 }
 

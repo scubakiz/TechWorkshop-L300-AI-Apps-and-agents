@@ -14,6 +14,8 @@ with open(ID_PROMPT_TARGET, 'r', encoding='utf-8') as file:
     ID_PROMPT = file.read()
 
 project_endpoint = os.environ["AZURE_AI_AGENT_ENDPOINT"]
+agent_id = os.environ["interior_designer"]
+
 
 # Choose authentication method based on IS_LOCAL_AUTH environment variable
 is_local_auth = os.getenv("IS_LOCAL_AUTH", "false").lower() == "true"
@@ -57,9 +59,27 @@ project_client.agents.enable_auto_function_calls(tools=functions)
 
  # Create the agent using a specific deployment, name, instructions, and toolset
 with project_client:
-    agent = project_client.agents.create_agent(
-        model=os.environ["AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME"],  # Model deployment name
-        name="Zava Interior Design Agent",  # Name of the agent
-        instructions=ID_PROMPT,  # Instructions for the agent
-        toolset=toolset)
-    print(f"Created agent, ID: {agent.id}")
+    agent_exists = False    
+    if agent_id:
+        # Check if agent exists.
+        agent = project_client.agents.get_agent(agent_id)
+        print(f"Retrieved existing agent, ID: {agent.id}")
+        agent_exists = True
+    
+    if agent_exists:
+        agent = project_client.agents.update_agent(
+            agent_id=agent.id,
+            model=os.environ["AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME"],  # Model deployment name
+            name="Zava Interior Design Agent",  # Name of the agent
+            instructions=ID_PROMPT,  # Updated instructions for the agent
+            # toolset=toolset
+        )
+        print(f"Updated agent, ID: {agent.id}")
+    else:
+        agent = project_client.agents.create_agent(
+            model=os.environ["AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME"],  # Model deployment name
+            name="Zava Interior Design Agent",  # Name of the agent
+            instructions=ID_PROMPT,  # Instructions for the agent
+            # toolset=toolset
+        )
+        print(f"Created agent, ID: {agent.id}")

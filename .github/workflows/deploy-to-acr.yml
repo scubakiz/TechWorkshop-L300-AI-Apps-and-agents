@@ -1,72 +1,72 @@
 name: Deploy to Azure Container Registry
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-  workflow_dispatch:
+    push:
+        branches:
+            - main
+        paths:
+            - "src/**"
+    workflow_dispatch:
 
 env:
-  REGISTRY_NAME: '' # Will be set dynamically
-  IMAGE_NAME: 'chat-app'
-  RESOURCE_GROUP: 'techworkshop-l300-ai-agents' # Update this to match your resource group
+    REGISTRY_NAME: "" # Will be set dynamically
+    IMAGE_NAME: "chat-app"
+    RESOURCE_GROUP: "techworkshop-l300-ai-agents" # Update this to match your resource group
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    - name: Get ACR name
-      id: get-acr
-      run: |
-        # Get the container registry name from the resource group
-        ACR_NAME=$(az acr list --resource-group ${{ env.RESOURCE_GROUP }} --query '[0].name' -o tsv)
-        echo "ACR_NAME=$ACR_NAME" >> $GITHUB_OUTPUT
-        echo "Registry name: $ACR_NAME"
-    
-    - name: Login to Azure Container Registry
-      run: |
-        az acr login --name ${{ steps.get-acr.outputs.ACR_NAME }}
-    
-    - name: Create .env file from secret
-      working-directory: ./src
-      run: |
-        echo "${{ secrets.ENV }}" > .env
-        echo "✅ Created .env file from GitHub secret"
-        # Show that the file was created (without revealing contents)
-        ls -la .env
-    
-    - name: Build Docker image
-      working-directory: ./src
-      run: |
-        docker build -t ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
-        docker tag ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
-    
-    - name: Push Docker image to ACR
-      run: |
-        docker push ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        docker push ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
-    
-    - name: Clean up .env file
-      working-directory: ./src
-      if: always()
-      run: |
-        rm -f .env
-        echo "🧹 Cleaned up .env file"
-    
-    - name: Output image details
-      run: |
-        echo "🚀 Successfully deployed to Azure Container Registry!"
-        echo "Registry: ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io"
-        echo "Image: ${{ env.IMAGE_NAME }}"
-        echo "Tags: ${{ github.sha }}, latest"
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Get ACR name
+              id: get-acr
+              run: |
+                  # Get the container registry name from the resource group
+                  ACR_NAME=$(az acr list --resource-group ${{ env.RESOURCE_GROUP }} --query '[0].name' -o tsv)
+                  echo "ACR_NAME=$ACR_NAME" >> $GITHUB_OUTPUT
+                  echo "Registry name: $ACR_NAME"
+
+            - name: Login to Azure Container Registry
+              run: |
+                  az acr login --name ${{ steps.get-acr.outputs.ACR_NAME }}
+
+            - name: Create .env file from secret
+              working-directory: ./src
+              run: |
+                  echo "${{ secrets.ENV }}" > .env
+                  echo "✅ Created .env file from GitHub secret"
+                  # Show that the file was created (without revealing contents)
+                  ls -la .env
+
+            - name: Build Docker image
+              working-directory: ./src
+              run: |
+                  docker build -t ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+                  docker tag ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+
+            - name: Push Docker image to ACR
+              run: |
+                  docker push ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+                  docker push ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+
+            - name: Clean up .env file
+              working-directory: ./src
+              if: always()
+              run: |
+                  rm -f .env
+                  echo "🧹 Cleaned up .env file"
+
+            - name: Output image details
+              run: |
+                  echo "🚀 Successfully deployed to Azure Container Registry!"
+                  echo "Registry: ${{ steps.get-acr.outputs.ACR_NAME }}.azurecr.io"
+                  echo "Image: ${{ env.IMAGE_NAME }}"
+                  echo "Tags: ${{ github.sha }}, latest"
