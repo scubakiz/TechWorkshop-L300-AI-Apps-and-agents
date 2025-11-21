@@ -1,5 +1,10 @@
 OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT="true"
 
+# Authentication method selection
+# Set to "true" to use Azure CLI authentication for local development
+# Set to "false" or omit for DefaultAzureCredential (for Azure deployment)
+IS_LOCAL_AUTH="true"
+
 # Azure AI Foundry credentials
 AZURE_OPENAI_ENDPOINT=""
 AZURE_OPENAI_KEY=""

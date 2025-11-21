@@ -2,7 +2,7 @@ import logging
 import pandas as pd
 import os
 from azure.cosmos import CosmosClient, PartitionKey
-from azure.identity import DefaultAzureCredential, AzureCliCredential
+from azure.identity import DefaultAzureCredential
 from azure.core.exceptions import AzureError
 from dotenv import load_dotenv
 
@@ -15,6 +15,7 @@ DATABASE_NAME = os.environ.get("DATABASE_NAME")
 CONTAINER_NAME = os.environ.get("CONTAINER_NAME")
 CSV_FILE = r"data/updated_product_catalog(in).csv"  #Placeholder here to avoid rerunning the code
 
+print(COSMOS_ENDPOINT)
 
 # 1. Read data from CSV
 df = pd.read_csv(CSV_FILE, encoding='cp1252') 
@@ -31,34 +32,22 @@ logging.basicConfig(level=logging.WARNING)
 
 
 def get_cosmos_client(endpoint: str | None, key: str | None = None):
-    """Try to authenticate to Cosmos DB using Azure CLI credentials first.
+    """Try to authenticate to Cosmos DB using DefaultAzureCredential first.
 
-    If that fails, fall back to DefaultAzureCredential, then to using the provided key.
+    If that fails, fall back to using the provided key.
     Returns a connected CosmosClient instance.
     """
     if not endpoint:
         raise ValueError("COSMOS_ENDPOINT must be provided in environment variables")
 
-    # Try Azure CLI credential first (most reliable for local development)
-    try:
-        logger.info("Attempting to authenticate to Cosmos DB using AzureCliCredential...")
-        credential = AzureCliCredential()
-        client = CosmosClient(endpoint, credential=credential)
-
-        # perform a light operation to validate the credential (will raise if unauthorized)
-        _ = list(client.list_databases())
-        logger.info("Authenticated to Cosmos DB with AzureCliCredential.")
-        return client
-    except Exception as ex:
-        logger.warning("Azure CLI authentication failed: %s", ex)
-
-    # Try DefaultAzureCredential as fallback
+    # Try AAD first
     try:
         logger.info("Attempting to authenticate to Cosmos DB using DefaultAzureCredential (AAD)...")
         credential = DefaultAzureCredential()
         client = CosmosClient(endpoint, credential=credential)
 
         # perform a light operation to validate the credential (will raise if unauthorized)
+        # Using read_account or listing databases is a small call; here we try to list databases.
         _ = list(client.list_databases())
         logger.info("Authenticated to Cosmos DB with DefaultAzureCredential.")
         return client
@@ -78,13 +67,11 @@ def get_cosmos_client(endpoint: str | None, key: str | None = None):
             logger.error("Endpoint+key authentication failed: %s", ex)
             raise
 
-    # If we reach here, all auth methods failed or no key provided
-    raise RuntimeError("Failed to authenticate to Cosmos DB using Azure CLI credentials, DefaultAzureCredential, and no valid COSMOS_KEY was provided. Make sure you're logged in with 'az login'.")
+    # If we reach here, both auth methods failed or no key provided
+    raise RuntimeError("Failed to authenticate to Cosmos DB using DefaultAzureCredential and no valid COSMOS_KEY was provided")
 
 
 # 2. Connect to Cosmos DB
-#credential = DefaultAzureCredential()
-#client = CosmosClient(COSMOS_ENDPOINT, credential=credential)
 client = get_cosmos_client(COSMOS_ENDPOINT, COSMOS_KEY)
 
 if not DATABASE_NAME:
@@ -111,3 +98,4 @@ for idx, row in df.iterrows():
     print(f"Uploaded: ProductID {item['ProductID']}")
 
 print("All data uploaded to Cosmos DB.")
+ 

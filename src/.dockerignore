@@ -1,8 +1,76 @@
+# Git and version control
+.git
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# Python bytecode and cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.log
-__pycache__/
-data/
+.Python
+
+# Virtual environments
+env
+.env*
 venv/
+.venv
+ENV
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+.pytest_cache
+.coverage
+htmlcov
+.tox
+
+# Build outputs
+dist
+build
+*.egg-info
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Node.js (if any)
+node_modules
+npm-debug.log*
+
+# Azure and deployment files
+.azure
+azure-pipelines.yml
+
+# GitHub
+.github
+
+# Any backup or temporary files
+*~
+*.bak
+*.backup
+
+# Jupyter notebooks (if any)
+*.ipynb_checkpoints
+
+# Database files (shouldn't be in container)
+*.db
+*.sqlite
+*.sqlite3
+
+# Data directory (already excluded but keeping for clarity)
+data/
