@@ -14,6 +14,7 @@ on:
             - "src/app/agents/customerLoyaltyAgent_initializer.py"
             - "src/prompts/CustomerLoyaltyAgentPrompt.txt"
             - "src/app/tools/discountLogic.py"
+    workflow_dispatch:
 
 jobs:
     update-customer-loyalty-agent:

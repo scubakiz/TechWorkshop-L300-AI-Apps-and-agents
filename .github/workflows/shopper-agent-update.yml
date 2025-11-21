@@ -11,6 +11,7 @@ on:
         paths:
             - "src/app/agents/shopperAgent_initializer.py"
             - "src/prompts/ShopperAgentPrompt.txt"
+    workflow_dispatch:
 
 jobs:
     update-shopper-agent:
