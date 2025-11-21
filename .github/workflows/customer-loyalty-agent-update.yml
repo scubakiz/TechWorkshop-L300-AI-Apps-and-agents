@@ -1,0 +1,99 @@
+# Customer Loyalty Agent Workflow - Updated for detection
+name: Customer Loyalty Agent Update
+
+on:
+    push:
+        branches: [main, develop]
+        paths:
+            - "src/app/agents/customerLoyaltyAgent_initializer.py"
+            - "src/prompts/CustomerLoyaltyAgentPrompt.txt"
+            - "src/app/tools/discountLogic.py"
+    pull_request:
+        branches: [main]
+        paths:
+            - "src/app/agents/customerLoyaltyAgent_initializer.py"
+            - "src/prompts/CustomerLoyaltyAgentPrompt.txt"
+            - "src/app/tools/discountLogic.py"
+
+jobs:
+    update-customer-loyalty-agent:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: "3.11"
+
+            - name: Cache pip dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cache/pip
+                  key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pip-
+
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r src/requirements.txt
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Set up Azure CLI
+              run: |
+                  # Authenticate Azure CLI for azure.ai.projects package
+                  az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+                  az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Run Customer Loyalty Agent Initializer
+              env:
+                  # Azure AI Project settings
+                  AZURE_AI_AGENT_ENDPOINT: ${{ secrets.AZURE_AI_AGENT_ENDPOINT }}
+                  AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME: ${{ secrets.AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME }}
+
+                  # Customer Loyalty Agent ID
+                  customer_loyalty: ${{ secrets.CUSTOMER_LOYALTY_AGENT_ID }}
+
+                  # Azure OpenAI settings (required by discountLogic.py)
+                  AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+                  AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_KEY }}
+                  gpt_deployment: ${{ secrets.GPT_DEPLOYMENT_NAME }}
+
+                  # Application Insights for telemetry
+                  APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}
+
+                  # Azure Authentication settings
+                  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+                  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+                  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+                  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+                  # Set to use DefaultAzureCredential for CI/CD
+                  IS_LOCAL_AUTH: "false"
+
+              run: |
+                  cd src/app/agents
+                  python customerLoyaltyAgent_initializer.py
+
+            - name: Verify agent update
+              run: |
+                  echo "✅ Customer Loyalty Agent has been updated successfully"
+                  echo "🔄 Triggered by changes to:"
+                  echo "   - customerLoyaltyAgent_initializer.py"
+                  echo "   - CustomerLoyaltyAgentPrompt.txt" 
+                  echo "   - discountLogic.py"
+
+            - name: Report status
+              if: failure()
+              run: |
+                  echo "❌ Customer Loyalty Agent update failed"
+                  echo "Please check the logs above for error details"
+                  exit 1
+# Updated to trigger workflow detection

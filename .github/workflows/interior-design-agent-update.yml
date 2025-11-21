@@ -1,0 +1,99 @@
+name: Interior Design Agent Update
+
+on:
+    push:
+        branches: [main, develop]
+        paths:
+            - "src/app/agents/interiorDesignAgent_initializer.py"
+            - "src/prompts/InteriorDesignAgentPrompt.txt"
+            - "src/app/tools/imageCreationTool.py"
+    pull_request:
+        branches: [main]
+        paths:
+            - "src/app/agents/interiorDesignAgent_initializer.py"
+            - "src/prompts/InteriorDesignAgentPrompt.txt"
+            - "src/app/tools/imageCreationTool.py"
+
+jobs:
+    update-interior-design-agent:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v4
+              with:
+                  python-version: "3.11"
+
+            - name: Cache pip dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.cache/pip
+                  key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pip-
+
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r src/requirements.txt
+
+            - name: Azure Login
+              uses: azure/login@v1
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+            - name: Set up Azure CLI
+              run: |
+                  # Authenticate Azure CLI for azure.ai.projects package
+                  az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+                  az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Run Interior Design Agent Initializer
+              env:
+                  # Azure AI Project settings
+                  AZURE_AI_AGENT_ENDPOINT: ${{ secrets.AZURE_AI_AGENT_ENDPOINT }}
+                  AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME: ${{ secrets.AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME }}
+
+                  # Interior Design Agent ID
+                  interior_designer: ${{ secrets.INTERIOR_DESIGNER_AGENT_ID }}
+
+                  # Azure Storage settings (required by imageCreationTool.py)
+                  storage_account_name: ${{ secrets.STORAGE_ACCOUNT_NAME }}
+                  storage_container_name: ${{ secrets.STORAGE_CONTAINER_NAME }}
+
+                  # GPT Image Generation settings (required by imageCreationTool.py)
+                  gpt-image-1-endpoint: ${{ secrets.GPT_IMAGE_1_ENDPOINT }}
+                  gpt-image-1-deployment: ${{ secrets.GPT_IMAGE_1_DEPLOYMENT }}
+                  gpt-image-1-api_version: ${{ secrets.GPT_IMAGE_1_API_VERSION }}
+                  subscription_key: ${{ secrets.GPT_IMAGE_1_SUBSCRIPTION_KEY }}
+
+                  # Azure Authentication settings
+                  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+                  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+                  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+                  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+                  # Set to use DefaultAzureCredential for CI/CD
+                  IS_LOCAL_AUTH: "false"
+
+              run: |
+                  cd src/app/agents
+                  python interiorDesignAgent_initializer.py
+
+            - name: Verify agent update
+              run: |
+                  echo "✅ Interior Design Agent has been updated successfully"
+                  echo "🔄 Triggered by changes to:"
+                  echo "   - interiorDesignAgent_initializer.py"
+                  echo "   - InteriorDesignAgentPrompt.txt" 
+                  echo "   - imageCreationTool.py"
+
+            - name: Report status
+              if: failure()
+              run: |
+                  echo "❌ Interior Design Agent update failed"
+                  echo "Please check the logs above for error details"
+                  exit 1

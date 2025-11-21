@@ -54,5 +54,5 @@ out/
 *.azuredevops
 
 # Github (allow workflows)
-.github/
+.github/*
 !.github/workflows/
