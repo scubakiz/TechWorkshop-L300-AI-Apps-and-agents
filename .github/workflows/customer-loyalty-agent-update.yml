@@ -46,12 +46,6 @@ jobs:
               with:
                   creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-            - name: Set up Azure CLI
-              run: |
-                  # Authenticate Azure CLI for azure.ai.projects package
-                  az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-                  az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
             - name: Run Customer Loyalty Agent Initializer
               env:
                   # Azure AI Project settings
