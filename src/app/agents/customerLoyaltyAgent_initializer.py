@@ -1,3 +1,4 @@
+# Customer Loyalty Agent - Workflow triggered on 2025-11-21 22:15:00
 # Customer Loyalty Agent - Testing GitHub Actions workflow
 import os
 import sys

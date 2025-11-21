@@ -96,4 +96,5 @@ jobs:
                   echo "❌ Customer Loyalty Agent update failed"
                   echo "Please check the logs above for error details"
                   exit 1
+
 # Updated to trigger workflow detection
